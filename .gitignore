@@ -1,0 +1,6 @@
+config.h
+*.txt
+*.jpg
+*.png
+*.zip
+*.tar.gz
