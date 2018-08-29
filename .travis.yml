@@ -1,0 +1,27 @@
+dist: trusty
+sudo: required
+
+language: c++
+
+env:
+  - ARDUINO_VERSION=1.8.6 ARDUINO_ROOT=/opt/arduino ARDUINO_HOME=${HOME}/Arduino ARDUINO_ESP8266_ROOT=${ARDUINO_ROOT}/hardware/esp8266com/esp8266
+
+before-install:
+  - apt-get update -qq && apt-get upgrade -qq
+
+install:
+  - mkdir -p ${ARDUINO_HOME}/libraries
+  - cd ${ARDUINO_HOME}/libraries
+  - ( LIB=Syslog VERSION=master && wget https://github.com/arcao/${LIB}/archive/${VERSION}.zip -q -O ${LIB}.zip && unzip -q ${LIB}.zip && rm ${LIB}.zip && mv ${LIB}-* ${LIB} )
+  - ( LIB=ESP8266Ping VERSION=master && wget https://github.com/dancol90/${LIB}/archive/${VERSION}.zip -q -O ${LIB}.zip && unzip -q ${LIB}.zip && rm ${LIB}.zip && mv ${LIB}-* ${LIB} )
+  - ( cd /opt && wget https://downloads.arduino.cc/arduino-${ARDUINO_VERSION}-linux64.tar.xz && tar xf arduino-${ARDUINO_VERSION}-linux64.tar.xz && mv arduino-${ARDUINO_VERSION} arduino)
+  - git clone https://github.com/esp8266/Arduino.git ${ARDUINO_ESP8266_ROOT}
+  - cd ${ARDUINO_ESP8266_ROOT}
+  - git submodule init && git submodule update
+  - ( cd tools && python get.py )
+
+script:
+  - cd ${HOME}/build/gyengus/wdt
+  - mkdir build
+  - cp config.example.h config.h
+  - ${ARDUINO_ROOT}/arduino-builder -compile -verbose -hardware ${ARDUINO_ROOT}/hardware/ -tools ${ARDUINO_ROOT}/hardware/esp8266com/esp8266/tools/ -tools ${ARDUINO_ROOT}/tools-builder/ -libraries ${ARDUINO_ROOT}/hardware/esp8266com/esp8266/libraries  -libraries ${ARDUINO_ROOT}/libraries -libraries ${ARDUINO_HOME}/libraries/ -prefs build.flash_ld=${ARDUINO_ROOT}/hardware/esp8266com/esp8266/tools/sdk/ld/eagle.flash.1m64.ld -prefs build.flash_freq=40 -prefs build.flash_size=1M -prefs build.flash_mode=DOUT -prefs build.f_cpu=80000000 -fqbn esp8266com:esp8266:generic -build-path ${HOME}/build/gyengus/wdt/build wdt.ino
