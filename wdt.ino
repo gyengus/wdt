@@ -68,7 +68,10 @@ void setup() {
 
   ESP.wdtEnable(15000);
 
-  String buf = "Started, watching host: " + String(HOST);
+  IPAddress ip = WiFi.localIP();
+  String buf = "Connected, IP: " + String(ip[0]) + "." + String(ip[1]) + "." + String(ip[2]) + "." + String(ip[3]);
+  syslog.logf(LOG_INFO, buf.c_str());
+  buf = "Started, watching host: " + String(HOST);
   syslog.logf(LOG_INFO, buf.c_str());
 }
 
@@ -103,8 +106,9 @@ void resetHost() {
   delay(1000);
   digitalWrite(RELAY, LOW);
   if (DEBUG) Serial.println("Relay low");
-  syslog.logf(LOG_ERR, "Host restarted");
-  sendNotification("Host restarted");
+  String buf = "Host (" + String(HOST) + ") restarted";
+  syslog.logf(LOG_INFO, buf.c_str());
+  sendNotification(buf);
 
   ticker.attach(PING_INTERVALL, setNeedCheck);
 }
@@ -117,8 +121,9 @@ void checkHost() {
   if (!pingHost()) {
     failedPings++;
     if (failedPings >= PING_RETRY_NUM) {
-      syslog.logf(LOG_ERR, "Host unreachable");
-      if (DEBUG) Serial.println("Host not reachable");
+      String buf = "Host (" + String(HOST) + ") unreachable";
+      syslog.logf(LOG_ERR, buf.c_str());
+      if (DEBUG) Serial.println(buf);
       failedPings = 0;
       resetHost();
     }
