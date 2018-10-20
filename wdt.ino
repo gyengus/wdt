@@ -1,12 +1,14 @@
 #include "config.h"
 
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 #include <ESP8266NetBIOS.h>
 #include <ESP8266Ping.h>
 #include <WiFiUdp.h>
 #include <Syslog.h>
 #include <Ticker.h>
 
+ESP8266WebServer server(80);
 WiFiClient espClient;
 WiFiUDP udpClient;
 Ticker ticker;
@@ -15,6 +17,8 @@ Syslog syslog(udpClient, SYSLOG_SERVER, SYSLOG_PORT, DEVICE_HOSTNAME, APP_NAME, 
 String macAddress = "";
 long lastWiFiReconnectAttempt = 0;
 int failedPings = 0;
+long lastPingTime = 0;
+bool lastPingResult = false;
 bool needCheck = false;
 
 void setNeedCheck();
@@ -23,6 +27,21 @@ bool pingHost();
 void resetHost();
 bool connectToWiFi();
 void sendNotification(String message);
+
+void serveJSON() {
+  String json = "{\"deviceName\": \"" + String(DEVICE_HOSTNAME) + "\","
+              + "\"mac\": \"" + WiFi.macAddress() + "\","
+              + "\"sketchSize\": \"" + String(ESP.getSketchSize()) + "\","
+              + "\"freeSketchSize\": \"" + String(ESP.getFreeSketchSpace()) + "\","
+              + "\"flashChipSize\": \"" + String(ESP.getFlashChipSize()) + "\","
+              + "\"realFlashSize\": \"" + String(ESP.getFlashChipRealSize()) + "\","
+              + "\"syslogServer\": \"" + SYSLOG_SERVER + "\","
+              + "\"watchedHost\": \"" + HOST + "\","
+              + "\"lastPingTime\": \"" + String(lastPingTime) + "\","
+              + "\"lastPingResult\": \"" + (lastPingResult ? "success" : "failed") + "\""
+              + "}";
+  server.send(200, "application/json", json);
+}
 
 void setup() {
   ESP.wdtDisable();
@@ -42,6 +61,9 @@ void setup() {
   NBNS.begin(DEVICE_HOSTNAME);
   connectToWiFi();
 
+  server.on("/", serveJSON);
+  server.begin();
+
   ticker.attach(PING_INTERVALL, setNeedCheck);
 
   ESP.wdtEnable(15000);
@@ -53,6 +75,7 @@ void setup() {
 void loop() {
   ESP.wdtFeed();
   if (WiFi.status() == WL_CONNECTED) {
+    server.handleClient();
     if (needCheck) {
       needCheck = false;
       checkHost();
@@ -102,16 +125,16 @@ void checkHost() {
   }
 }
 bool pingHost() {
-  bool success;
   if (!DEBUG) digitalWrite(LED, LOW);
-  if (success = Ping.ping(HOST, PING_NUM)) {
+  if (lastPingResult = Ping.ping(HOST, PING_NUM)) {
     if (DEBUG) Serial.println("Ping OK");
   } else {
     if (DEBUG) Serial.println("Ping failed");
     syslog.logf(LOG_ERR, "Ping failed");
   }
   if (!DEBUG) digitalWrite(LED, HIGH);
-  return success;
+  lastPingTime = millis();
+  return lastPingResult;
 }
 
 bool connectToWiFi() {
