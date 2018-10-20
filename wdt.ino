@@ -66,7 +66,7 @@ void setup() {
 
   ticker.attach(PING_INTERVALL, setNeedCheck);
 
-  ESP.wdtEnable(15000);
+  ESP.wdtEnable(5000);
 
   IPAddress ip = WiFi.localIP();
   String buf = "Connected, IP: " + String(ip[0]) + "." + String(ip[1]) + "." + String(ip[2]) + "." + String(ip[3]);
@@ -84,8 +84,9 @@ void loop() {
       checkHost();
     }
   } else {
+    if (DEBUG) Serial.println("Disconnected from WiFi network");
     long now = millis();
-    if (now - lastWiFiReconnectAttempt > 5000) {
+    if ((now - lastWiFiReconnectAttempt) >= 2000) {
       if (connectToWiFi()) {
         lastWiFiReconnectAttempt = 0;
       } else {
@@ -93,8 +94,6 @@ void loop() {
       }
     }
   }
-  ESP.wdtFeed();
-  delay(500);
 }
 
 void resetHost() {
