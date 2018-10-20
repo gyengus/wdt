@@ -19,7 +19,7 @@ long lastWiFiReconnectAttempt = 0;
 int failedPings = 0;
 long lastPingTime = 0;
 bool lastPingResult = false;
-bool needCheck = false;
+bool needCheck = true;
 
 void setNeedCheck();
 void checkHost();
@@ -118,7 +118,9 @@ void setNeedCheck() {
 }
 
 void checkHost() {
-  if (!pingHost()) {
+  if (pingHost()) {
+    failedPings = 0;
+  } else {
     failedPings++;
     if (failedPings >= PING_RETRY_NUM) {
       String buf = "Host (" + String(HOST) + ") unreachable";
