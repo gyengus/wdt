@@ -6,6 +6,7 @@
 #define SYSLOG_PORT 514
 #define DEVICE_HOSTNAME "wdt"
 #define APP_NAME "wdt"
+#define ACCESS_TOKEN ""
 
 #define HOST ""
 #define PING_INTERVALL 60 /* in seconds */

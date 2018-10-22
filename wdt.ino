@@ -43,6 +43,16 @@ void serveJSON() {
   server.send(200, "application/json", json);
 }
 
+void serveReset() {
+  String token = server.arg("access-token");
+  if (token == ACCESS_TOKEN) {
+    resetHost();
+    server.send(200, "application/json", "{\"status\": \"OK\"}");
+  } else {
+    server.send(403, "application/json", "{\"status\": \"ACCESS DENIED\"}");
+  }
+}
+
 void setup() {
   ESP.wdtDisable();
   pinMode(RELAY, OUTPUT);
@@ -62,6 +72,7 @@ void setup() {
   connectToWiFi();
 
   server.on("/", serveJSON);
+  server.on("/reset", serveReset);
   server.begin();
 
   ticker.attach(PING_INTERVALL, setNeedCheck);
