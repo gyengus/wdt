@@ -1,3 +1,6 @@
+/*
+ * Generic ESP8266 Module, 80MHz, Flash, ck, 26MHz, 40MHz, DOUT, 1M (64K SPIFFS), 1, v1.4 Compile from source, Disabled, None, Only Sketch, 115200
+ */
 #include "config.h"
 
 #include <ESP8266WiFi.h>
