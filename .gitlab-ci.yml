@@ -12,6 +12,7 @@ variables:
 build:
   stage: build
   before_script:
+    - pwd
     - apt-get update -qq && apt-get upgrade -qq
     - apt-get install -y git wget unzip xz-utils python
     - mkdir -p ${ARDUINO_HOME}/libraries
