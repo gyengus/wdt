@@ -1,19 +1,24 @@
 image: debian
 
 stages:
+  - before-install
+  - install
   - build
 
 env:
-  - ARDUINO_VERSION=1.8.6 ARDUINO_ROOT=/opt/arduino ARDUINO_HOME=${HOME}/Arduino ARDUINO_ESP8266_ROOT=${ARDUINO_ROOT}/hardware/esp8266com/esp8266
+  ARDUINO_VERSION: "1.8.6"
+  ARDUINO_ROOT: "/opt/arduino"
+  ARDUINO_HOME: "${HOME}/Arduino"
+  ARDUINO_ESP8266_ROOT: "${ARDUINO_ROOT}/hardware/esp8266com/esp8266"
 
 before-install:
-  stage: build
+  stage: before-install
   script:
     - apt-get update -qq && apt-get upgrade -qq
     - apt-get install git
 
 install:
-  stage: build
+  stage: install
   dependencies:
     - before-install
   script:
