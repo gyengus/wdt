@@ -13,7 +13,7 @@ build:
   stage: build
   before_script:
     - apt-get update -qq && apt-get upgrade -qq
-    - apt-get install -y git wget unzip
+    - apt-get install -y git wget unzip xz-utils
     - mkdir -p ${ARDUINO_HOME}/libraries
     - cd ${ARDUINO_HOME}/libraries
     - ( LIB=Syslog VERSION=master && wget https://github.com/arcao/${LIB}/archive/${VERSION}.zip -q -O ${LIB}.zip && unzip -q ${LIB}.zip && rm ${LIB}.zip && mv ${LIB}-* ${LIB} )
