@@ -15,7 +15,7 @@ before-install:
   stage: before-install
   script:
     - apt-get update -qq && apt-get upgrade -qq
-    - apt-get install git
+    - apt-get install -y git
 
 install:
   stage: install
