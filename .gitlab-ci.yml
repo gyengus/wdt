@@ -1,8 +1,6 @@
 image: debian
 
 stages:
-  - before-install
-  - install
   - build
 
 variables:
@@ -11,17 +9,11 @@ variables:
   ARDUINO_HOME: "${HOME}/Arduino"
   ARDUINO_ESP8266_ROOT: "${ARDUINO_ROOT}/hardware/esp8266com/esp8266"
 
-before-install:
-  stage: before-install
-  script:
+build:
+  stage: build
+  before_script:
     - apt-get update -qq && apt-get upgrade -qq
     - apt-get install -y git wget
-
-install:
-  stage: install
-  dependencies:
-    - before-install
-  script:
     - mkdir -p ${ARDUINO_HOME}/libraries
     - cd ${ARDUINO_HOME}/libraries
     - ( LIB=Syslog VERSION=master && wget https://github.com/arcao/${LIB}/archive/${VERSION}.zip -q -O ${LIB}.zip && unzip -q ${LIB}.zip && rm ${LIB}.zip && mv ${LIB}-* ${LIB} )
@@ -31,11 +23,6 @@ install:
     - cd ${ARDUINO_ESP8266_ROOT}
     - git submodule init && git submodule update
     - ( cd tools && python get.py )
-
-build:
-  stage: build
-  dependencies:
-    - install
   script:
     - cd ${HOME}/build/gyengus/wdt
     - mkdir build
