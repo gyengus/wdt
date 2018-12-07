@@ -33,8 +33,9 @@ build:
   script:
     - cd ${WORKDIR}
     - mkdir build
-    - echo $CONFIG_H > config.h
+    - echo "$CONFIG_H" > config.h
     - echo "#define COMMIT_HASH \"$CI_COMMIT_SHA\"" >> config.h
+    - cat config.h
     - ${ARDUINO_ROOT}/arduino-builder -compile -verbose -hardware ${ARDUINO_ROOT}/hardware/ -tools ${ARDUINO_ROOT}/hardware/esp8266com/esp8266/tools/ -tools ${ARDUINO_ROOT}/tools-builder/ -libraries ${ARDUINO_ROOT}/hardware/esp8266com/esp8266/libraries  -libraries ${ARDUINO_ROOT}/libraries -libraries ${ARDUINO_HOME}/libraries/ -prefs build.flash_ld=${ARDUINO_ROOT}/hardware/esp8266com/esp8266/tools/sdk/ld/eagle.flash.1m64.ld -prefs build.flash_freq=40 -prefs build.flash_size=1M -prefs build.flash_mode=DOUT -prefs build.f_cpu=80000000 -fqbn esp8266com:esp8266:generic -build-path ${WORKDIR}/build wdt.ino
   after_script:
     - rm config.h
