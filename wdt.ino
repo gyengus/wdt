@@ -80,11 +80,12 @@ void setup() {
 	ESP.wdtDisable();
 	pinMode(RELAY, OUTPUT);
 
+	macAddress = WiFi.macAddress();
+
 #if defined(DEBUG)
 	Serial.begin(115200);
 	delay(1000);
 	Serial.println("");
-	macAddress = WiFi.macAddress();
 	Serial.print("MAC address: ");
 	Serial.println(macAddress);
 #else
@@ -328,8 +329,8 @@ boolean connectToMQTT() {
 #if defined(DEBUG)
 		Serial.println(" success");
 #endif
-		String deviceData = "{\"name\": \"" + String(DEVICE_NAME) + "\", \"deviceDescription\": \"" + String(DEVICE_DESCRIPTION) + "\", \"ip\": \"" + WiFi.localIP().toString() + "\", \"mac\": \"" + macAddress + "\", \"buildDate\": \"" + St
-			publishToMQTT(MQTT_DEVICE_TOPIC_FULL, deviceData, true);
+		String deviceData = "{\"name\": \"" + String(DEVICE_HOSTNAME) + "\", \"deviceDescription\": \"" + String(DEVICE_DESCRIPTION) + "\", \"ip\": \"" + WiFi.localIP().toString() + "\", \"mac\": \"" + macAddress + "\"}";
+		publishToMQTT(MQTT_DEVICE_TOPIC_FULL, deviceData, true);
 	} else {
 #if defined(DEBUG)
 		Serial.println(" failed");
