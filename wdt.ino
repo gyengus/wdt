@@ -18,15 +18,19 @@ Ticker ticker;
 Syslog syslog(udpClient, SYSLOG_SERVER, SYSLOG_PORT, DEVICE_HOSTNAME, APP_NAME, LOG_INFO);
 
 #if defined(MQTT_HOST)
+#define SPIFFS_ALIGNED_OBJECT_INDEX_TABLES 1
 #include "PubSubClient.h"
 PubSubClient client(espClient);
 unsigned long lastMQTTReconnectAttempt = 0;
 String MQTT_DEVICE_TOPIC_FULL = "";
+String MQTT_UPDATE_TOPIC_FULL = "";
+boolean requireRestart = false;
 
 bool publishToMQTT(String topic, String payload, bool retain = true);
 void mqttDisConnect();
 void mqttReConnect();
 boolean connectToMQTT();
+void receiveFromMQTT(const MQTT::Publish& pub);
 #endif
 
 String macAddress = "";
@@ -105,6 +109,7 @@ void setup() {
 
 #if defined(MQTT_HOST)
 	MQTT_DEVICE_TOPIC_FULL = MQTT_DEVICE_TOPIC + String(DEVICE_HOSTNAME);
+	MQTT_UPDATE_TOPIC_FULL = MQTT_DEVICE_TOPIC_FULL + String("/update");
 	client.set_server(MQTT_HOST, MQTT_PORT);
 	lastMQTTReconnectAttempt = 0;
 #endif
@@ -122,6 +127,23 @@ void setup() {
 
 void loop() {
 	ESP.wdtFeed();
+#if defined(MQTT_HOST)
+	if (requireRestart) {
+		client.loop();
+		requireRestart = false;
+#if defined(DEBUG)
+		Serial.println("Reboot...");
+#endif
+		client.disconnect();
+		ESP.wdtDisable();
+		delay(200);
+		ESP.restart();
+		while (1) {
+			ESP.wdtFeed();
+			delay(200);
+		}
+	}
+#endif
 	if (WiFi.status() == WL_CONNECTED) {
 		server.handleClient();
 		if (needCheck) {
@@ -350,5 +372,41 @@ bool publishToMQTT(String topic, String payload, bool retain) {
 	}
 	client.loop();
 	return true;
+}
+
+void receiveFromMQTT(const MQTT::Publish& pub) {
+#if defined(DEBUG)
+	Serial.print("Message arrived [");
+	Serial.print(pub.topic());
+	Serial.print("] Size: " + String(pub.payload_len()) + " B");
+	Serial.println();
+#endif
+	if (pub.topic() == MQTT_UPDATE_TOPIC_FULL) {
+		ESP.wdtFeed();
+		uint32_t size = pub.payload_len();
+		if (size == 0) {
+#if defined(DEBUG)
+			Serial.println("Error, sketch size is 0 B");
+#endif
+		} else {
+#if defined(DEBUG)
+			Serial.println("Receiving firmware update of " + String(size) + " bytes...");
+			Serial.setDebugOutput(false);
+#endif
+			ESP.wdtFeed();
+			if (ESP.updateSketch(*pub.payload_stream(), size, false, false)) {
+				ESP.wdtFeed();
+#if defined(DEBUG)
+				Serial.println("Clearing retained message.");
+#endif
+				publishToMQTT(MQTT_UPDATE_TOPIC_FULL, "", true);
+				ESP.wdtFeed();
+#if defined(DEBUG)
+				Serial.println("Update success");
+#endif
+				requireRestart = true;
+			}
+		}
+	}
 }
 #endif
