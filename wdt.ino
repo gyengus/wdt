@@ -328,7 +328,6 @@ boolean connectToMQTT() {
 #if defined(DEBUG)
 		Serial.println(" success");
 #endif
-		client.subscribe(MQTT_TOPIC);
 		String deviceData = "{\"name\": \"" + String(DEVICE_NAME) + "\", \"deviceDescription\": \"" + String(DEVICE_DESCRIPTION) + "\", \"ip\": \"" + WiFi.localIP().toString() + "\", \"mac\": \"" + macAddress + "\", \"buildDate\": \"" + St
 			publishToMQTT(MQTT_DEVICE_TOPIC_FULL, deviceData, true);
 	} else {
