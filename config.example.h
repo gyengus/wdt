@@ -2,9 +2,16 @@
 #define RELAY 0
 //#define DEBUG 1
 
+#define MQTT_HOST "mqtt"
+#define MQTT_PORT 1883
+#define MQTT_USER ""
+#define MQTT_PASSWORD ""
+#define MQTT_DEVICE_TOPIC ""
+
 #define SYSLOG_SERVER ""
 #define SYSLOG_PORT 514
 #define DEVICE_HOSTNAME "wdt"
+#define DEVICE_DESCRIPTION ""
 #define APP_NAME "wdt"
 #define ACCESS_TOKEN ""
 
