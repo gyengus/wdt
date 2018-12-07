@@ -1,6 +1,6 @@
 #define LED 1
 #define RELAY 0
-#define DEBUG 0
+//#define DEBUG 1
 
 #define SYSLOG_SERVER ""
 #define SYSLOG_PORT 514

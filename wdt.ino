@@ -41,7 +41,12 @@ void serveJSON() {
               + "\"syslogServer\": \"" + SYSLOG_SERVER + "\","
               + "\"watchedHost\": \"" + HOST + "\","
               + "\"lastPingTime\": \"" + String(lastPingTime) + "\","
-              + "\"lastPingResult\": \"" + (lastPingResult ? "success" : "failed") + "\""
+              + "\"lastPingResult\": \"" + (lastPingResult ? "success" : "failed") + "\","
+  #if defined(DEBUG)
+	      + "\"debug\": true"
+  #else
+	      + "\"debug\": false"
+  #endif
               + "}";
   server.send(200, "application/json", json);
 }
@@ -60,16 +65,16 @@ void setup() {
   ESP.wdtDisable();
   pinMode(RELAY, OUTPUT);
 
-  if (DEBUG) {
+  #if defined(DEBUG)
     Serial.begin(115200);
     delay(1000);
     Serial.println("");
     macAddress = WiFi.macAddress();
     Serial.print("MAC address: ");
     Serial.println(macAddress);
-  } else {
+  #else
     pinMode(LED, OUTPUT);
-  }
+  #endif
 
   NBNS.begin(DEVICE_HOSTNAME);
   connectToWiFi();
@@ -98,7 +103,9 @@ void loop() {
       checkHost();
     }
   } else {
-    if (DEBUG) Serial.println("Disconnected from WiFi network");
+    #if defined(DEBUG)
+	Serial.println("Disconnected from WiFi network");
+    #endif
     long now = millis();
     if ((now - lastWiFiReconnectAttempt) >= 2000) {
       if (connectToWiFi()) {
@@ -115,10 +122,14 @@ void resetHost() {
   ticker.detach();
 
   digitalWrite(RELAY, HIGH);
-  if (DEBUG) Serial.println("Relay high");
+  #if defined(DEBUG)
+	Serial.println("Relay high");
+  #endif
   delay(1000);
   digitalWrite(RELAY, LOW);
-  if (DEBUG) Serial.println("Relay low");
+  #if defined(DEBUG)
+	Serial.println("Relay low");
+  #endif
   String buf = "Host (" + String(HOST) + ") restarted";
   syslog.logf(LOG_INFO, buf.c_str());
   sendNotification(buf);
@@ -145,24 +156,32 @@ void checkHost() {
   }
 }
 bool pingHost() {
-  if (!DEBUG) digitalWrite(LED, LOW);
+  #if !defined(DEBUG)
+	digitalWrite(LED, LOW);
+  #endif
   if (lastPingResult = Ping.ping(HOST, PING_NUM)) {
-    if (DEBUG) Serial.println("Ping OK");
+    #if defined(DEBUG)
+	Serial.println("Ping OK");
+    #endif
   } else {
-    if (DEBUG) Serial.println("Ping failed");
+    #if defined(DEBUG)
+	Serial.println("Ping failed");
+    #endif
     syslog.logf(LOG_ERR, "Ping failed");
   }
-  if (!DEBUG) digitalWrite(LED, HIGH);
+  #if !defined(DEBUG)
+	digitalWrite(LED, HIGH);
+  #endif
   lastPingTime = millis();
   return lastPingResult;
 }
 
 bool connectToWiFi() {
   WiFi.mode(WIFI_STA);
-  if (DEBUG) {
+  #if defined(DEBUG)
     Serial.print("Connecting to WiFi network: ");
     Serial.println(sta_ssid);
-  }
+  #endif
   WiFi.hostname(DEVICE_HOSTNAME);
   WiFi.begin(sta_ssid, sta_password);
 
@@ -170,20 +189,26 @@ bool connectToWiFi() {
   while (WiFi.status() != WL_CONNECTED) {
     ESP.wdtFeed();
     delay(500);
-    if (DEBUG) Serial.print(".");
+    #if defined(DEBUG)
+	Serial.print(".");
+    #endif
     i++;
     if (i >= 20) break;
   }
-  if (DEBUG) Serial.println("");
+  #if defined(DEBUG)
+	Serial.println("");
+  #endif
 
   if (WiFi.status() == WL_CONNECTED) {
-    if (DEBUG) {
+    #if defined(DEBUG)
       Serial.print("Success, IP address: ");
       Serial.println(WiFi.localIP());
-    }
+    #endif
     return true;
   } else {
-    if (DEBUG) Serial.println("Unable to connect");
+    #if defined(DEBUG)
+	Serial.println("Unable to connect");
+    #endif
     return false;
   }
 }
@@ -193,22 +218,24 @@ void sendNotification(String message) {
 
   if (client.connect("maker.ifttt.com", 80)) {
     String body = "{\"value1\": \"[" + String(DEVICE_HOSTNAME) + "] " + message + "\"}";
-    if (DEBUG) {
+    #if defined(DEBUG)
       Serial.println("Url: maker.ifttt.com/trigger/" + String(maker_event) + "/with/key/" + String(maker_api_key));
       Serial.println("Connected to remote host, sending data: " + body + "\n");
-    }
+    #endif
 
     client.println("POST /trigger/" + String(maker_event) + "/with/key/" + String(maker_api_key) + " HTTP/1.1");
     client.println("Host: maker.ifttt.com");
     client.println("Content-Type: application/json");
-    if (!DEBUG) client.println("Connection: close"); // Ha ezt küldöm, akkor a szerver válasz nélkül bontja a kapcsolatot.
+    #if !defined(DEBUG)
+	client.println("Connection: close"); // Ha ezt küldöm, akkor a szerver válasz nélkül bontja a kapcsolatot.
+    #endif
     client.println("Content-Length: " + String(body.length()));
     client.println();
     client.println(body);
     client.println();
     delay(1000);
 
-    if (DEBUG) {
+    #if defined(DEBUG)
       Serial.println("IFTTT answer:");
       char c;
       while (client.available()){
@@ -216,10 +243,12 @@ void sendNotification(String message) {
         Serial.print(c);
       }
       Serial.println();
-    }
+    #endif
 
     client.stop();
   } else {
-    if (DEBUG) Serial.println("Error iftttMessage");
+    #if defined(DEBUG)
+	Serial.println("Error iftttMessage");
+    #endif
   }
 }
