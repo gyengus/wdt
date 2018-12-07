@@ -50,6 +50,7 @@ void sendNotification(String message);
 void serveJSON() {
 	String json = "{\"deviceName\": \"" + String(DEVICE_HOSTNAME) + "\","
 		+ "\"mac\": \"" + WiFi.macAddress() + "\","
+		+ "\"commitHash\": \"" + String(COMMIT_HASH) + "\","
 		+ "\"sketchSize\": \"" + String(ESP.getSketchSize()) + "\","
 		+ "\"freeSketchSize\": \"" + String(ESP.getFreeSketchSpace()) + "\","
 		+ "\"flashChipSize\": \"" + String(ESP.getFlashChipSize()) + "\","
@@ -351,7 +352,7 @@ boolean connectToMQTT() {
 #if defined(DEBUG)
 		Serial.println(" success");
 #endif
-		String deviceData = "{\"name\": \"" + String(DEVICE_HOSTNAME) + "\", \"deviceDescription\": \"" + String(DEVICE_DESCRIPTION) + "\", \"ip\": \"" + WiFi.localIP().toString() + "\", \"mac\": \"" + macAddress + "\"}";
+		String deviceData = "{\"name\": \"" + String(DEVICE_HOSTNAME) + "\", \"deviceDescription\": \"" + String(DEVICE_DESCRIPTION) + "\", \"commitHash\": \"" + String(COMMIT_HASH) + "\", \"ip\": \"" + WiFi.localIP().toString() + "\", \"mac\": \"" + macAddress + "\"}";
 		publishToMQTT(MQTT_DEVICE_TOPIC_FULL, deviceData, true);
 	} else {
 #if defined(DEBUG)

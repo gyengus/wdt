@@ -25,3 +25,5 @@ const char *sta_password = "";
 
 const char *maker_api_key = "";
 const char *maker_event = "";
+
+#define COMMIT_HASH "none"
