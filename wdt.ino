@@ -18,7 +18,7 @@ Ticker ticker;
 
 Syslog syslog(udpClient, SYSLOG_SERVER, SYSLOG_PORT, DEVICE_HOSTNAME, APP_NAME, LOG_INFO);
 String macAddress = "";
-long lastWiFiReconnectAttempt = 0;
+unsigned long lastWiFiReconnectAttempt = 0;
 int failedPings = 0;
 long lastPingTime = 0;
 bool lastPingResult = false;
@@ -106,7 +106,7 @@ void loop() {
     #if defined(DEBUG)
 	Serial.println("Disconnected from WiFi network");
     #endif
-    long now = millis();
+    unsigned long now = millis();
     if ((now - lastWiFiReconnectAttempt) >= 2000) {
       if (connectToWiFi()) {
         lastWiFiReconnectAttempt = 0;
