@@ -149,7 +149,9 @@ void checkHost() {
     if (failedPings >= PING_RETRY_NUM) {
       String buf = "Host (" + String(HOST) + ") unreachable";
       syslog.logf(LOG_ERR, buf.c_str());
-      if (DEBUG) Serial.println(buf);
+      #if defined(DEBUG)
+	Serial.println(buf);
+      #endif
       failedPings = 0;
       resetHost();
     }
