@@ -112,6 +112,7 @@ void setup() {
 	MQTT_DEVICE_TOPIC_FULL = MQTT_DEVICE_TOPIC + String(DEVICE_HOSTNAME);
 	MQTT_UPDATE_TOPIC_FULL = MQTT_DEVICE_TOPIC_FULL + String("/update");
 	client.set_server(MQTT_HOST, MQTT_PORT);
+  client.set_callback(receiveFromMQTT);
 	lastMQTTReconnectAttempt = 0;
 #endif
 
