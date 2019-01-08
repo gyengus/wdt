@@ -5,7 +5,6 @@
 
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <ESP8266NetBIOS.h>
 #include <ESP8266Ping.h>
 #include <WiFiUdp.h>
 #include <Syslog.h>
@@ -97,7 +96,6 @@ void setup() {
 	pinMode(LED, OUTPUT);
 #endif
 
-	NBNS.begin(DEVICE_HOSTNAME);
 	connectToWiFi();
 
 	server.on("/", serveJSON);
