@@ -38,6 +38,8 @@ int failedPings = 0;
 long lastPingTime = 0;
 bool lastPingResult = false;
 bool needCheck = true;
+char hostname[] = HOST;
+IPAddress host_ip;
 
 void setNeedCheck();
 void checkHost();
@@ -223,7 +225,11 @@ bool pingHost() {
 #if !defined(DEBUG)
 	digitalWrite(LED, LOW);
 #endif
-	if (lastPingResult = Ping.ping(HOST, PING_NUM)) {
+	IPAddress tmpip;
+	if (WiFi.hostByName(HOST, tmpip, 5000)) {
+		host_ip = tmpip;
+	}
+	if (lastPingResult = Ping.ping(host_ip, PING_NUM)) {
 #if defined(DEBUG)
 		Serial.println("Ping OK");
 #endif
