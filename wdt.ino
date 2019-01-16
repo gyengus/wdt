@@ -100,6 +100,10 @@ void setup() {
 
 	connectToWiFi();
 
+	IPAddress ip = WiFi.localIP();
+	String buf = "Started " + String(DEVICE_HOSTNAME) + " (commit: " + String(COMMIT_HASH) + "), IP: " + String(ip[0]) + "." + String(ip[1]) + "." + String(ip[2]) + "." + String(ip[3]);
+	syslog.logf(LOG_INFO, buf.c_str());
+
 	server.on("/", serveJSON);
 	server.on("/reset", serveReset);
 #if defined(MQTT_HOST)
@@ -120,9 +124,6 @@ void setup() {
 
 	ESP.wdtEnable(5000);
 
-	IPAddress ip = WiFi.localIP();
-	String buf = "Connected, IP: " + String(ip[0]) + "." + String(ip[1]) + "." + String(ip[2]) + "." + String(ip[3]);
-	syslog.logf(LOG_INFO, buf.c_str());
 	buf = "Started, watching host: " + String(HOST);
 	syslog.logf(LOG_INFO, buf.c_str());
 }
@@ -396,8 +397,10 @@ void receiveFromMQTT(const MQTT::Publish& pub) {
 			Serial.println("Error, sketch size is 0 B");
 #endif
 		} else {
+			String buf = "Receiving firmware update of " + String(size) + " bytes";
+			syslog.logf(LOG_INFO, buf.c_str());
 #if defined(DEBUG)
-			Serial.println("Receiving firmware update of " + String(size) + " bytes...");
+			Serial.println("Receiving firmware update of " + String(size) + " bytes");
 			Serial.setDebugOutput(false);
 #endif
 			ESP.wdtFeed();
@@ -411,6 +414,7 @@ void receiveFromMQTT(const MQTT::Publish& pub) {
 #if defined(DEBUG)
 				Serial.println("Update success");
 #endif
+				syslog.logf(LOG_INFO, "Update success, restart...");
 				requireRestart = true;
 			}
 		}
