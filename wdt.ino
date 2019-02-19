@@ -12,9 +12,11 @@
 
 ESP8266WebServer server(80);
 WiFiClient espClient;
-WiFiUDP udpClient;
 Ticker ticker;
+#if defined(SYSLOG_SERVER)
+WiFiUDP udpClient;
 Syslog syslog(udpClient, SYSLOG_SERVER, SYSLOG_PORT, DEVICE_HOSTNAME, APP_NAME, LOG_INFO);
+#endif
 
 #if defined(MQTT_HOST)
 #define SPIFFS_ALIGNED_OBJECT_INDEX_TABLES 1
@@ -47,6 +49,7 @@ bool pingHost();
 void resetHost();
 bool connectToWiFi();
 void sendNotification(String message);
+bool log(uint16_t pri, const char *fmt);
 
 void serveJSON() {
 	String json = "{\"deviceName\": \"" + String(DEVICE_HOSTNAME) + "\","
@@ -56,7 +59,9 @@ void serveJSON() {
 		+ "\"freeSketchSize\": \"" + String(ESP.getFreeSketchSpace()) + "\","
 		+ "\"flashChipSize\": \"" + String(ESP.getFlashChipSize()) + "\","
 		+ "\"realFlashSize\": \"" + String(ESP.getFlashChipRealSize()) + "\","
+#if defined(SYSLOG_SERVER)
 		+ "\"syslogServer\": \"" + SYSLOG_SERVER + "\","
+#endif
 		+ "\"watchedHost\": \"" + HOST + "\","
 		+ "\"lastPingTime\": \"" + String(lastPingTime) + "\","
 		+ "\"lastPingResult\": \"" + (lastPingResult ? "success" : "failed") + "\","
@@ -102,7 +107,7 @@ void setup() {
 
 	IPAddress ip = WiFi.localIP();
 	String buf = "Started " + String(DEVICE_HOSTNAME) + " (commit: " + String(COMMIT_HASH) + "), IP: " + String(ip[0]) + "." + String(ip[1]) + "." + String(ip[2]) + "." + String(ip[3]);
-	syslog.logf(LOG_INFO, buf.c_str());
+	log(LOG_INFO, buf.c_str());
 
 	server.on("/", serveJSON);
 	server.on("/reset", serveReset);
@@ -125,7 +130,7 @@ void setup() {
 	ESP.wdtEnable(5000);
 
 	buf = "Started, watching host: " + String(HOST);
-	syslog.logf(LOG_INFO, buf.c_str());
+	log(LOG_INFO, buf.c_str());
 }
 
 void loop() {
@@ -196,7 +201,7 @@ void resetHost() {
 	Serial.println("Relay low");
 #endif
 	String buf = "Host (" + String(HOST) + ") restarted";
-	syslog.logf(LOG_INFO, buf.c_str());
+	log(LOG_INFO, buf.c_str());
 	sendNotification(buf);
 
 	ticker.attach(PING_INTERVALL, setNeedCheck);
@@ -213,7 +218,7 @@ void checkHost() {
 		failedPings++;
 		if (failedPings >= PING_RETRY_NUM) {
 			String buf = "Host (" + String(HOST) + ") unreachable";
-			syslog.logf(LOG_ERR, buf.c_str());
+			log(LOG_ERR, buf.c_str());
 #if defined(DEBUG)
 			Serial.println(buf);
 #endif
@@ -238,7 +243,7 @@ bool pingHost() {
 #if defined(DEBUG)
 		Serial.println("Ping failed");
 #endif
-		syslog.logf(LOG_ERR, "Ping failed");
+		log(LOG_ERR, "Ping failed");
 	}
 #if !defined(DEBUG)
 	digitalWrite(LED, HIGH);
@@ -400,7 +405,7 @@ void receiveFromMQTT(const MQTT::Publish& pub) {
 #endif
 		} else {
 			String buf = "Receiving firmware update of " + String(size) + " bytes";
-			syslog.logf(LOG_INFO, buf.c_str());
+			log(LOG_INFO, buf.c_str());
 #if defined(DEBUG)
 			Serial.println("Receiving firmware update of " + String(size) + " bytes");
 			Serial.setDebugOutput(false);
@@ -416,10 +421,18 @@ void receiveFromMQTT(const MQTT::Publish& pub) {
 #if defined(DEBUG)
 				Serial.println("Update success");
 #endif
-				syslog.logf(LOG_INFO, "Update success, restart...");
+				log(LOG_INFO, "Update success, restart...");
 				requireRestart = true;
 			}
 		}
 	}
 }
 #endif
+
+bool log(uint16_t pri, const char *fmt) {
+#if defined(SYSLOG_SERVER)
+	return syslog.logf(pri, fmt);
+#else
+	return true;
+#endif
+}
