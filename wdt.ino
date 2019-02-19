@@ -251,10 +251,10 @@ bool connectToWiFi() {
 	WiFi.mode(WIFI_STA);
 #if defined(DEBUG)
 	Serial.print("Connecting to WiFi network: ");
-	Serial.println(sta_ssid);
+	Serial.println(STA_SSID);
 #endif
 	WiFi.hostname(DEVICE_HOSTNAME);
-	WiFi.begin(sta_ssid, sta_password);
+	WiFi.begin(STA_SSID, STA_PASSWORD);
 
 	int i = 0;
 	while (WiFi.status() != WL_CONNECTED) {
@@ -285,16 +285,17 @@ bool connectToWiFi() {
 }
 
 void sendNotification(String message) {
+#if defined(MAKER_EVENT)
 	WiFiClient client;
 
 	if (client.connect("maker.ifttt.com", 80)) {
 		String body = "{\"value1\": \"[" + String(DEVICE_HOSTNAME) + "] " + message + "\"}";
 #if defined(DEBUG)
-		Serial.println("Url: maker.ifttt.com/trigger/" + String(maker_event) + "/with/key/" + String(maker_api_key));
+		Serial.println("Url: maker.ifttt.com/trigger/" + String(MAKER_EVENT) + "/with/key/" + String(MAKER_API_KEY));
 		Serial.println("Connected to remote host, sending data: " + body + "\n");
 #endif
 
-		client.println("POST /trigger/" + String(maker_event) + "/with/key/" + String(maker_api_key) + " HTTP/1.1");
+		client.println("POST /trigger/" + String(MAKER_EVENT) + "/with/key/" + String(MAKER_API_KEY) + " HTTP/1.1");
 		client.println("Host: maker.ifttt.com");
 		client.println("Content-Type: application/json");
 #if !defined(DEBUG)
@@ -322,6 +323,7 @@ void sendNotification(String message) {
 		Serial.println("Error iftttMessage");
 #endif
 	}
+#endif
 }
 
 #if defined(MQTT_HOST)

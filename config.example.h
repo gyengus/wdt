@@ -20,10 +20,10 @@
 #define PING_NUM 2
 #define PING_RETRY_NUM 3
 
-const char *sta_ssid = "";
-const char *sta_password = "";
+#define STA_SSID ""
+#define STA_PASSWORD ""
 
-const char *maker_api_key = "";
-const char *maker_event = "";
+#define MAKER_API_KEY ""
+#define MAKER_EVENT ""
 
 #define COMMIT_HASH "none"
