@@ -106,8 +106,6 @@ void setup() {
 	connectToWiFi();
 
 	IPAddress ip = WiFi.localIP();
-	String buf = "Started " + String(DEVICE_HOSTNAME) + " (commit: " + String(COMMIT_HASH) + "), IP: " + String(ip[0]) + "." + String(ip[1]) + "." + String(ip[2]) + "." + String(ip[3]);
-	log(LOG_INFO, buf.c_str());
 
 	server.on("/", serveJSON);
 	server.on("/reset", serveReset);
@@ -121,7 +119,7 @@ void setup() {
 	MQTT_DEVICE_TOPIC_FULL = MQTT_DEVICE_TOPIC + String(DEVICE_HOSTNAME);
 	MQTT_UPDATE_TOPIC_FULL = MQTT_DEVICE_TOPIC_FULL + String("/update");
 	client.set_server(MQTT_HOST, MQTT_PORT);
-  client.set_callback(receiveFromMQTT);
+	client.set_callback(receiveFromMQTT);
 	lastMQTTReconnectAttempt = 0;
 #endif
 
@@ -129,7 +127,7 @@ void setup() {
 
 	ESP.wdtEnable(5000);
 
-	buf = "Started, watching host: " + String(HOST);
+	String buf = "Started " + String(DEVICE_HOSTNAME) + " (commit: " + String(COMMIT_HASH) + "), IP: " + String(ip[0]) + "." + String(ip[1]) + "." + String(ip[2]) + "." + String(ip[3]) + ", watching host: " + String(HOST);
 	log(LOG_INFO, buf.c_str());
 }
 
