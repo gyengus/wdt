@@ -39,6 +39,7 @@ unsigned long lastWiFiReconnectAttempt = 0;
 int failedPings = 0;
 long lastPingTime = 0;
 bool lastPingResult = false;
+int avg_time_ms = -1;
 bool needCheck = true;
 char hostname[] = HOST;
 IPAddress host_ip;
@@ -50,31 +51,10 @@ void resetHost();
 bool connectToWiFi();
 void sendNotification(String message);
 bool log(uint16_t pri, const char *fmt);
+String collectDataForJSON(bool forHTTP);
 
 void serveJSON() {
-	String json = "{\"deviceName\": \"" + String(DEVICE_HOSTNAME) + "\","
-		+ "\"mac\": \"" + WiFi.macAddress() + "\","
-		+ "\"commitHash\": \"" + String(COMMIT_HASH) + "\","
-		+ "\"sketchSize\": \"" + String(ESP.getSketchSize()) + "\","
-		+ "\"freeSketchSize\": \"" + String(ESP.getFreeSketchSpace()) + "\","
-		+ "\"flashChipSize\": \"" + String(ESP.getFlashChipSize()) + "\","
-		+ "\"realFlashSize\": \"" + String(ESP.getFlashChipRealSize()) + "\","
-#if defined(SYSLOG_SERVER)
-		+ "\"syslogServer\": \"" + SYSLOG_SERVER + "\","
-#endif
-		+ "\"watchedHost\": \"" + HOST + "\","
-		+ "\"lastPingTime\": \"" + String(lastPingTime) + "\","
-		+ "\"lastPingResult\": \"" + (lastPingResult ? "success" : "failed") + "\","
-#if defined(MQTT_HOST)
-		+ "\"mqttState\": \"" + (client.connected() ? "" : "dis") + "connected\","
-#endif
-#if defined(DEBUG)
-		+ "\"debug\": true"
-#else
-		+ "\"debug\": false"
-#endif
-		+ "}";
-	server.send(200, "application/json", json);
+	server.send(200, "application/json", collectDataForJSON(true));
 }
 
 void serveReset() {
@@ -237,11 +217,13 @@ bool pingHost() {
 #if defined(DEBUG)
 		Serial.println("Ping OK");
 #endif
+		avg_time_ms = Ping.averageTime();
 	} else {
 #if defined(DEBUG)
 		Serial.println("Ping failed");
 #endif
 		log(LOG_ERR, "Ping failed");
+		avg_time_ms = -1;
 	}
 #if !defined(DEBUG)
 	digitalWrite(LED, HIGH);
@@ -363,8 +345,7 @@ boolean connectToMQTT() {
 #if defined(DEBUG)
 		Serial.println(" success");
 #endif
-		String deviceData = "{\"name\": \"" + String(DEVICE_HOSTNAME) + "\", \"deviceDescription\": \"" + String(DEVICE_DESCRIPTION) + "\", \"commitHash\": \"" + String(COMMIT_HASH) + "\", \"ip\": \"" + WiFi.localIP().toString() + "\", \"mac\": \"" + macAddress + "\"}";
-		publishToMQTT(MQTT_DEVICE_TOPIC_FULL, deviceData, true);
+		publishToMQTT(MQTT_DEVICE_TOPIC_FULL, collectDataForJSON(false), true);
     client.subscribe(MQTT_UPDATE_TOPIC_FULL);
 	} else {
 #if defined(DEBUG)
@@ -433,4 +414,38 @@ bool log(uint16_t pri, const char *fmt) {
 #else
 	return true;
 #endif
+}
+
+String collectDataForJSON(bool forHTTP) {
+	String json = "{\"deviceName\": \"" + String(DEVICE_HOSTNAME) + "\","
+		+ "\"deviceDescription\": \"" + String(DEVICE_DESCRIPTION) + "\","
+		+ "\"mac\": \"" + WiFi.macAddress() + "\","
+		+ "\"commitHash\": " + String(COMMIT_HASH) + ","
+		+ "\"sketchSize\": " + String(ESP.getSketchSize()) + ","
+		+ "\"freeSketchSize\": " + String(ESP.getFreeSketchSpace()) + ","
+		+ "\"flashChipSize\": " + String(ESP.getFlashChipSize()) + ","
+		+ "\"realFlashSize\": " + String(ESP.getFlashChipRealSize()) + ","
+#if defined(SYSLOG_SERVER)
+		+ "\"syslogServer\": \"" + SYSLOG_SERVER + "\","
+#endif
+		+ "\"watchedHost\": \"" + HOST + "\",";
+	if (forHTTP) {
+			json += "\"lastPingTime\": " + String(lastPingTime) + ","
+				+ "\"lastPingResult\": \"" + (lastPingResult ? "success" : "failed") + "\","
+				+ "\"lastPingAvgTime\": " + String(avg_time_ms) + ","
+#if defined(MQTT_HOST)
+		+ "\"mqttState\": \"" + (client.connected() ? "" : "dis") + "connected\","
+		+ "\"deviceTopic\": \"" + MQTT_DEVICE_TOPIC_FULL + "\","
+#endif
+		+ "";
+} else  {
+	json += "\"ip\": \"" + WiFi.localIP().toString() + "\",";
+}
+#if defined(DEBUG)
+		json += "\"debug\": true";
+#else
+		json += "\"debug\": false";
+#endif
+		json += "}";
+	return json;
 }
