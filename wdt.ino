@@ -420,7 +420,7 @@ String collectDataForJSON(bool forHTTP) {
 	String json = "{\"deviceName\": \"" + String(DEVICE_HOSTNAME) + "\","
 		+ "\"deviceDescription\": \"" + String(DEVICE_DESCRIPTION) + "\","
 		+ "\"mac\": \"" + WiFi.macAddress() + "\","
-		+ "\"commitHash\": " + String(COMMIT_HASH) + ","
+		+ "\"commitHash\": \"" + String(COMMIT_HASH) + "\","
 		+ "\"sketchSize\": " + String(ESP.getSketchSize()) + ","
 		+ "\"freeSketchSize\": " + String(ESP.getFreeSketchSpace()) + ","
 		+ "\"flashChipSize\": " + String(ESP.getFlashChipSize()) + ","
