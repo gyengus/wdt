@@ -19,6 +19,7 @@
 #define PING_INTERVALL 60 /* in seconds */
 #define PING_NUM 2
 #define PING_RETRY_NUM 3
+#define WAIT_AFTER_RESET 180 /* in seconds */
 
 #define STA_SSID ""
 #define STA_PASSWORD ""

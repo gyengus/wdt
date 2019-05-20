@@ -1,5 +1,5 @@
 /*
- * Generic ESP8266 Module, 80MHz, Flash, ck, 26MHz, 40MHz, DOUT, 1M (64K SPIFFS), 1, v1.4 Compile from source, Disabled, None, Only Sketch, 115200
+ * Generic ESP8266 Module, 80MHz, Flash, ck, 26MHz, 40MHz, dout, 1M (64K SPIFFS), 1, v1.4 Compile from source, Disabled, None, Only Sketch, 115200
  */
 #include "config.h"
 
@@ -39,6 +39,7 @@ unsigned long lastWiFiReconnectAttempt = 0;
 int failedPings = 0;
 long lastPingTime = 0;
 bool lastPingResult = false;
+bool reseted = false;
 int avg_time_ms = -1;
 bool needCheck = true;
 char hostname[] = HOST;
@@ -181,8 +182,9 @@ void resetHost() {
 	String buf = "Host (" + String(HOST) + ") restarted";
 	log(LOG_INFO, buf.c_str());
 	sendNotification(buf);
+	reseted = true;
 
-	ticker.attach(PING_INTERVALL, setNeedCheck);
+	ticker.attach(WAIT_AFTER_RESET, setNeedCheck);
 }
 
 void setNeedCheck() {
@@ -192,6 +194,7 @@ void setNeedCheck() {
 void checkHost() {
 	if (pingHost()) {
 		failedPings = 0;
+		reseted = false;
 	} else {
 		failedPings++;
 		if (failedPings >= PING_RETRY_NUM) {
@@ -201,10 +204,11 @@ void checkHost() {
 			Serial.println(buf);
 #endif
 			failedPings = 0;
-			resetHost();
+			if (!reseted) resetHost();
 		}
 	}
 }
+
 bool pingHost() {
 #if !defined(DEBUG)
 	digitalWrite(LED, LOW);
