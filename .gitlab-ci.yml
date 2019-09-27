@@ -13,8 +13,6 @@ variables:
 
 build:
   stage: build
-  only:
-    - master
   artifacts:
     paths:
       - build/wdt.ino.bin
