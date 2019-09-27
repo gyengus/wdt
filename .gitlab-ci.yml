@@ -5,7 +5,7 @@ stages:
   - deploy
 
 variables:
-  ARDUINO_VERSION: "1.8.9"
+  ARDUINO_VERSION: "1.8.10"
   ARDUINO_ROOT: "/opt/arduino"
   ARDUINO_HOME: "${HOME}/Arduino"
   ARDUINO_ESP8266_ROOT: "${ARDUINO_ROOT}/hardware/esp8266com/esp8266"
